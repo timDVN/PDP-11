@@ -1,32 +1,58 @@
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include "do_func.h"
+#include "test1.h"
+#include "test2.h"
+#include "test3.h"
 
-typedef unsigned char byte;// 8 bit
-typedef unsigned short int word;// 16 bit
-typedef word Adress;// 16 bit
+
+#define PPP
+#define TESTT
 
 #define MEMSIZE (64*1024)
 
 byte mem[MEMSIZE];
-void test_mem(char * c[]);
+word reg[8];
+Arg dd, ss;
+word N, X, R;
+byte flag_N, flag_Z, flag_C;
+byte B;
+
 void b_write(Adress adr, byte b);
+
 byte b_read(Adress adr);
-void w_write(Adress adr, word w);
-word w_read(Adress adr);
-void load_file(const char * file);
+
+
+
+void load_file(const char *file);
 
 
 void b_write(Adress adr, byte b) {
-    mem[adr] = b;
+    if (adr <= 7)
+        reg[adr] = b;
+    else
+        mem[adr] = b;
 }
 
 byte b_read(Adress adr) {
-    return mem[adr];
+    if (adr <= 7)
+        return (byte)reg[adr];
+    else
+        return mem[adr];
 }
 
 void w_write(Adress adr, word w) {
-    mem[adr + 1] = (byte) (w >> 8);
-    mem[adr] = (byte) ((w << 8) >> 8);
+    if (adr <= 7)
+    {
+        reg[adr] = w;
+    } else
+    {
+        mem[adr + 1] = (byte) (w >> 8);
+        mem[adr] = (byte) (w);
+    }
 
 }
 
@@ -36,33 +62,53 @@ word w_read(Adress adr) {
     return w;
 }
 
-void load_file(const char * file) {
+void load_file(const char *file) {
     Adress adr, n;
     byte k;
-    FILE *f;
-    f = fopen(file, "rt");
-    fscanf(f,"%hx%hx", &adr, &n);
-    for (Adress i = 0; i < n; i++) {
-        fscanf(f,"%hhx", &k);
-        b_write(adr+i , k);
+    FILE *f = fopen(file, "r");
+    if (f == NULL) {
+        perror(file);
+        exit(errno);
     }
-    fclose(f);
+    fscanf(f, "%hx%hx", &adr, &n);
+    for (Adress i = 0; i < n; i++) {
+        fscanf(f, "%hhx", &k);
+        b_write(adr + i, k);
+    }
+    fclose(stdin);
 
 }
 
-int main(int argc, char * argv[]) {
-    test_mem(argv);
+
+Command cmd[] = {
+        {0070000, 0010000, "move",03,  (void (*)(void)) (char *) do_move},
+        {0170000, 0060000, "add",  03 ,(void (*)(void)) (char *)do_add},
+        {0177000, 0072000, "ASH",   012 ,(void (*)(void)) (char *)do_ash},
+        {0177000, 0073000, "ASHC",  012 ,(void (*)(void))(char *)do_ashc},
+        {0077700, 0006300, "ASL", 01,(void (*)(void))(char *) do_asl},
+        {0077700, 0006200, "ASR", 01,(void (*)(void))(char *) do_asr},
+        {0177700, 0000400, "BR",  020,(void (*)(void))(char *)do_br},
+        {0177777, 0000241, "CLC",   0,(void (*)(void))(char *) do_clc},
+        {0177777, 0000250, "CLN",   0,(void (*)(void))(char *) do_cln},
+        {0177777, 0000244, "CLZ",   0,(void (*)(void))(char *)do_clz},
+        {0077700, 0005100, "COM", 01,(void (*)(void)) (char *) do_com},
+        {0177000, 0004000, "JSR",   011,(void (*)(void))(char *)do_jsr},
+        {0077700, 0006100, "ROL", 01,(void (*)(void))(char *)do_rol},
+        {0077700, 0006000, "ROR", 01 , (void (*)(void))(char *)do_ror},
+        {0177777, 0000277, "SCC",  0 ,(void (*)(void))(char *)do_scc},
+        {0177777, 0000261, "SEC",   0,(void (*)(void))(char *)do_sec},
+        {0177777, 0000270, "SEN",  0,(void (*)(void)) (char *)do_sen},
+        {0177777, 0000264, "SEZ",  0,(void (*)(void)) (char *)do_sez},
+        {0177000, 0077000, "SOB", 014,(void (*)(void))(char *)do_sob},
+        {0177000, 0071000, "DIV", 012,(void (*)(void))(char *)do_div},
+        {0177777, 000000,  "halt",0,(void (*)(void))(char *)do_halt},
+        {0000000, 000000,  "unknown command", 0,(void (*)(void))(char *)do_nothing}
+};
+
+int main(int argc, char *argv[]) {
+#ifdef TESTT
+    load_file(argv[1]);
+    test3();
+#endif
     return 0;
-}
-
-void test_mem(char * c[]) {
-    byte b0 = 0xa;
-    word w0 = 0xcb0a;
-    w_write(4, w0);
-    b_write(2, b0);
-    assert(b0 == b_read(2));
-    assert(w0 == w_read(4));
-    load_file(c[1]);
-    for (int i = 4; i < 8; i++)
-        printf("%hhx ", b_read(i));
 }
