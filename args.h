@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef unsigned short int word;
+typedef unsigned char byte;// 8 bit
+typedef unsigned short int word;// 16 bit
 word w_read(unsigned short int adr);
+byte b_read(unsigned short int adr);
 
 typedef struct arg{
     word val; // значние аргумента
@@ -11,6 +13,7 @@ typedef struct arg{
 
 extern unsigned char mem[64*1024];
 extern word reg[8];
+extern byte B;
 
 Arg get_mr(word w){
     Arg res;
@@ -26,15 +29,23 @@ Arg get_mr(word w){
             break;
         case 1:
             res.adr = reg[r];
-            res.val = w_read(res.adr); // b_read
+            if (B == 0)
+                res.val = w_read(res.adr);
+            else
+                res.val = b_read(res.adr);
 #ifdef PPP
             printf("R%o ", r);
 #endif
             break;
         case 2:
             res.adr = reg[r];
-            res.val = w_read(res.adr);// b_read
-            reg[r] += 2; // +1
+            if (B == 0 || r == 7) {
+                res.val = w_read(res.adr);
+                reg[r] += 2;
+            } else{
+                res.val = b_read(res.adr);
+                reg[r] += 1;
+            }
 #ifdef PPP
 if (r == 7)
     {
@@ -59,9 +70,16 @@ if (r == 7)
 
             break;
         case 4:
-            reg[r] -= 2;// -1
-            res.adr = reg[r];
-            res.val = w_read(res.adr);
+            if ( r == 7 || B == 0) {
+                reg[r] -= 2;// -1
+                res.adr = reg[r];
+                res.val = w_read(res.adr);
+            } else
+            {reg[r] -= 1;
+                res.adr = reg[r];
+                res.val = w_read(res.adr);
+            }
+
 
 #ifdef PPP
             printf("R%o ", r);

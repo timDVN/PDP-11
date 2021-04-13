@@ -1,11 +1,9 @@
-#include <stdio.h>
 
-typedef unsigned short int word;// 16 bit
 
 typedef struct command {
-    word mask;
-    word opcode;
+    unsigned short int mask;
+    unsigned short int opcode;
     char *name;
-
-    void (*func)(struct command *self);
+    char  params;
+    void (*func) (void);
 } Command;
