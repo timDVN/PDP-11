@@ -1,4 +1,4 @@
-void test_mem1(char *c[]) { //тест на моды, w/b_read/write (for file in1.txt)
+void test_mem1() { //тест на моды, w/b_read/write (for file in1.txt)
     byte b0 = 0x0a;
     byte b1 = 0xcb;
     word w0 = 0xcb0a;
@@ -12,7 +12,6 @@ void test_mem1(char *c[]) { //тест на моды, w/b_read/write (for file i
     assert(w0 == w_read(14));
     assert(b0 == b_read(12));
     assert(b1 == b_read(13));
-    load_file(c[1]);
     for (int i = 0; i < 10; i+=2)
         printf("%06o ", w_read(i + 0x200));
     printf("\n\n\n");

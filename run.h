@@ -11,6 +11,13 @@ extern word R;
 extern word X;
 extern Command cmd[];
 
+void  print_r(){
+    for (int i = 0; i < 8; i++) {
+        printf("r%o = %o; ",i, reg[i]);
+    }
+    printf("\n");
+}
+
 #define pc reg[7]
 
 void run() {
