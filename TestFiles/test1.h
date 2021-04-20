@@ -40,5 +40,8 @@ void test_mem1() { //тест на моды, w/b_read/write (for file in1.txt)
     res = get_mr(055);
     assert(res.val == 020);
     assert(reg[5] == 01004);
-    print_r();
+    for (int i = 0; i < 8; i++) {
+        printf("r%o = %o; ",i, reg[i]);
+    }
+    printf("\n");
 }

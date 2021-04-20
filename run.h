@@ -1,5 +1,6 @@
 #include "cmd.h"
 #include "args.h"
+#include "trace.h"
 
 word w_read(unsigned short int adr);
 
@@ -10,12 +11,12 @@ extern word N;
 extern word R;
 extern word X;
 extern Command cmd[];
+extern FILE * out;
 
 void  print_r(){
     for (int i = 0; i < 8; i++) {
-        printf("r%o = %o; ",i, reg[i]);
+        trace_func("r%o = %o ; ",i, reg[i]);
     }
-    printf("\n");
 }
 
 word byte_to_word(byte b){
@@ -34,15 +35,13 @@ void run() {
     int i = 0;
     while (1) {
         word w = w_read(pc);
-        printf("%06o %06o ", pc, w);
+        trace_func("%06o %06o ", pc, w);
         pc += 2;
         i = 0;
         while ((w & cmd[i].mask ) != cmd[i].opcode) {
             i++;
             }
-#ifdef PPP
-        printf("%s\n", cmd[i].name);
-#endif
+        trace_func("%s ", cmd[i].name);
         if ((((w >> 15) & 01) == 1) && ((( cmd[i].mask>> 15) & 01) == 0))
             B = 1;
         else
@@ -71,5 +70,6 @@ void run() {
             X = (w & 0377);
         }
         cmd[i].func();
+        trace_func("\n");
     }
 }

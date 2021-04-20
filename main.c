@@ -11,10 +11,7 @@
 #include "TestFiles/arr0.h"
 #include "TestFiles/arr0_byte.h"
 #include "TestFiles/tst_cmp.h"
-
-
-#define PPP
-#define TESTT
+#include "TestFiles/hello_putchar.h"
 
 #define MEMSIZE (64*1024)
 
@@ -24,16 +21,12 @@ Arg dd, ss;
 word N, X, R;
 byte flag_N, flag_Z, flag_C;
 byte B;
+char * trc;
+FILE * trace;
 
 void b_write(Adress adr, byte b);
-
 byte b_read(Adress adr);
-
-
-
-
 void load_file(const char *file);
-
 
 void b_write(Adress adr, byte b) {
     if (adr <= 7) {
@@ -42,6 +35,8 @@ void b_write(Adress adr, byte b) {
     }
     else
         mem[adr] = b;
+    if (adr == 0177566  || adr == 0177567)
+        printf("%c", w_read(0177566));
 }
 
 byte b_read(Adress adr) {
@@ -60,6 +55,9 @@ void w_write(Adress adr, word w) {
         mem[adr + 1] = (byte) (w >> 8);
         mem[adr] = (byte) (w);
     }
+
+    if (adr == 0177566)
+        printf("%c\n", w);
 
 }
 
@@ -83,7 +81,7 @@ void load_file(const char *file) {
             b_write(adr + i, k);
         }
     }
-    fclose(stdin);
+    fclose(f);
 
 }
 
@@ -120,9 +118,25 @@ Command cmd[] = {
 };
 
 int main(int argc, char *argv[]) {
-#ifdef TESTT
-    load_file(argv[1]);
-    tst_cmp();
-#endif
+    trc = 0;
+    int inp = 1;
+    if (argv[1][0] == '-' && argv[1][1] == 't' && argv[1][2] == 0 && argv[2] != 0 )
+    {
+        int len = strlen(argv[2]);
+        char * t = ".trace";
+        trc = malloc(sizeof(char)*(7 + len));
+        for (int i = 0; i < len ; i++) {
+            trc[i] = argv[2][i];
+        }
+        for (int i = 0 ; i < 7 ; i++ )
+        {
+            trc[i + len] = t[i];
+        }
+         trace = fopen(trc, "w");
+        inp = 2;
+    }
+    load_file(argv[inp]);
+    test_putchar();
+    fclose(trace);
     return 0;
 }
