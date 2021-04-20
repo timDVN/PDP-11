@@ -1,3 +1,5 @@
+#include <assert.h>
+
 void test2(){//tests for add (for file in2.txt)
     reg[0] = 5;
     reg[1] = 3;

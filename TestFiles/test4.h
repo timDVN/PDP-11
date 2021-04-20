@@ -1,3 +1,5 @@
+#include <assert.h>
+
 void test4() //test for sob(with in4.txt file)
 {
     w_write(0200,015);

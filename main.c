@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -11,6 +10,7 @@
 #include "TestFiles/sob_b.h"
 #include "TestFiles/arr0.h"
 #include "TestFiles/arr0_byte.h"
+#include "TestFiles/tst_cmp.h"
 
 
 #define PPP
@@ -31,15 +31,14 @@ byte b_read(Adress adr);
 
 
 
+
 void load_file(const char *file);
 
 
 void b_write(Adress adr, byte b) {
     if (adr <= 7) {
-        if ((b & 0200 )!= 0)
-            reg[adr] = b + 0177400;
-        else
-            reg[adr] = b;
+
+        reg[adr] = byte_to_word(b);
     }
     else
         mem[adr] = b;
@@ -114,6 +113,8 @@ Command cmd[] = {
         {0177777, 0000264, "SEZ",  0,(void (*)(void)) (char *)do_sez},
         {0177000, 0077000, "SOB", 014,(void (*)(void))(char *)do_sob},
         {0177000, 0071000, "DIV", 012,(void (*)(void))(char *)do_div},
+        {0077700, 0005700, "TST",01, (void (*)(void))(char *)do_tst},
+        {0070000, 0020000, "CMP",03, (void (*)(void))(char *)do_cmp},
         {0177777, 000000,  "halt",0,(void (*)(void))(char *)do_halt},
         {0000000, 000000,  "unknown command", 0,(void (*)(void))(char *)do_nothing}
 };
@@ -121,8 +122,7 @@ Command cmd[] = {
 int main(int argc, char *argv[]) {
 #ifdef TESTT
     load_file(argv[1]);
-    run();
-    test_arr0_byte();
+    tst_cmp();
 #endif
     return 0;
 }

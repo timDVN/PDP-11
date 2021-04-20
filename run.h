@@ -18,6 +18,15 @@ void  print_r(){
     printf("\n");
 }
 
+word byte_to_word(byte b){
+    word res;
+    if (((b >> 7) & 1) == 1)
+        res =  b + 0177400;
+    else
+        res = b;
+    return res;
+}
+
 #define pc reg[7]
 
 void run() {

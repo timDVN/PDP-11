@@ -1,3 +1,5 @@
+#include <assert.h>
+
 void test_mem1() { //тест на моды, w/b_read/write (for file in1.txt)
     byte b0 = 0x0a;
     byte b1 = 0xcb;

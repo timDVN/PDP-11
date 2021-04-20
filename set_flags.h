@@ -10,12 +10,12 @@ void set_N(word w)
         flag_N = 0;
 }
 
-void set_C(int w, word res)
+void set_C(int w)
 {
-    if ( w == res)
-        flag_C == 0;
+    if ((((w >> 16) & 1) == 1) && (w > 0))
+        flag_C = 1;
     else
-        flag_C == 1;
+        flag_C = 0;
 }
 
 void set_Z(word w)

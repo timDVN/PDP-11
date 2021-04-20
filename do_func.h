@@ -18,7 +18,7 @@ void do_add() {
     w_write(dd.adr, (word)dd.val + ss.val);
     set_N(dd.val + ss.val);
     set_Z(dd.val + ss.val);
-    set_C(ss.val + dd.val, (word)(dd.val + ss.val));
+    set_C(ss.val + dd.val);
 }
 
 void do_move() {
@@ -65,7 +65,7 @@ void do_halt() {
     printf("\n");
     for (int i = 0; i < 10; i+=2)
         printf("%06o ", w_read(i + 0x200));
-    printf(" NZC = %06o", 4*flag_N + 2*flag_Z + flag_C);
+    printf(" NZC = %06o\n", 4*flag_N + 2*flag_Z + flag_C);
     exit(0);
 }
 void do_ash() {
@@ -80,13 +80,13 @@ void do_asl() {
         w_write(dd.adr, (word) dd.val * 2);
         set_N((word)dd.val * 2);
         set_Z((word)dd.val * 2);
-        set_C(dd.val * 2, (word)dd.val * 2);
+        set_C(dd.val * 2);
     }
     else{
         b_write(dd.adr, (byte)dd.val * 2);
         set_N((dd.val*2) << 8);
         set_Z((byte) dd.val*2);
-        set_C(((byte) dd.val * 2),  ((byte) (dd.val * 2)));
+        set_C((((byte) dd.val) * 2) << 8);
         }
     printf("asl\n");
 
@@ -108,6 +108,35 @@ void do_asr() {
     flag_C = 0;
 
 }
+
+void do_tst(){
+    if (B == 1)
+    {
+        dd.val = byte_to_word(dd.val);
+    }
+    set_Z(dd.val);
+    set_N(dd.val);
+    flag_C = 0;
+    printf("tst NZC = %02o\n", 4*flag_N + 2*flag_Z + flag_C);
+
+}
+
+void do_cmp(){
+    word res;
+    if (B == 1)
+    {
+        ss.val = (byte) ss.val;
+        dd.val = (byte)dd.val;
+    }
+    res = ss.val - dd.val;
+    set_N(res);
+    set_Z(res);
+    set_C(ss.val - dd.val);
+    printf("cmp NZC = %02o\n", 4*flag_N + 2*flag_Z + flag_C);
+
+
+}
+
 void do_com() {
     printf("com...\n");
 }

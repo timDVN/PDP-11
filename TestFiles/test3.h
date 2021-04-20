@@ -1,3 +1,5 @@
+#include <assert.h>
+
 void test3(){ //tests for asl,asr,br (for file in3.txt)
     reg[1] = 010;
     reg[2] = 01050;
