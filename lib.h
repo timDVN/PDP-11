@@ -66,6 +66,7 @@ void trace_func(const char *format, ...);
 
 
 //
+        void do_adc();
 
         void do_add();
 

@@ -177,10 +177,10 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < 7; i++) {
             trc[i + len] = t[i];
         }
+        test_mem1();
         trace = fopen(trc, "w");
         inp = 2;
     }
-    test_mem1();
     load_file(argv[inp]);
     w_write(0177564, 0177777);
     run();
@@ -226,21 +226,27 @@ void run() {
         if ((cmd[i].params &  01) == 1)
         {
             dd = get_mr(w);
-            w = w >> 12;
+            w = w >> 6;
+            if  (((cmd[i].params >> 1) & 01) == 1)
+                w = w >> 6;
         }
         if (((cmd[i].params >> 2) & 01) == 1)
         {
             N = (w & 077);
             w = w >> 6;
+            trace_func("%o ", pc - 2*N);
         }
         if (((cmd[i].params >> 3)& 01) == 1)
         {
             R = (w & 07);
+            trace_func("R%o ", R);
             w = w >> 3;
         }
         if (((cmd[i].params >> 4)& 01) == 1)
         {
             X = (w & 0377);
+            char x = (char)x;
+            trace_func("%o ", pc+x*2);
         }
         cmd[i].func();
         trace_func("\n");
@@ -261,6 +267,7 @@ Arg get_mr(word w){
         case 0:
             res.val = reg[r];
             res.adr = r;
+            trace_func("R%o ", r);
             break;
         case 1:
             res.adr = reg[r];
@@ -268,44 +275,58 @@ Arg get_mr(word w){
                 res.val = w_read(res.adr);
             else
                 res.val = b_read(res.adr);
+            trace_func("(R%o) ", r);
             break;
         case 2:
             res.adr = reg[r];
+            res.val = B ? b_read(res.adr) : w_read(res.adr);
             if (B == 0 || r == 7 || r == 6) {
-                res.val = w_read(res.adr);
                 reg[r] += 2;
             } else{
-                res.val = b_read(res.adr);
                 reg[r] += 1;
             }
+
+            if (r == 7)
+                trace_func("#%o ", res.val);
+            else
+                trace_func("(R%o)+ ", r);
             break;
         case 3:
             res.adr = w_read(reg[r]);
             res.val = w_read(res.adr);
             reg[r] += 2;
+            if (r == 7)
+                trace_func("@#%o ", res.adr);
+            else
+                trace_func("@(R%o)+ ", r);
             break;
         case 4:
-            if ( r == 7 || B == 0 || r == 6) {
-                reg[r] -= 2;// -1
-                res.adr = reg[r];
-                res.val = w_read(res.adr);
-            } else
-            {reg[r] -= 1;
-                res.adr = reg[r];
-                res.val = w_read(res.adr);
+            if (B == 0 || r == 7 || r == 6) {
+                reg[r] -= 2;
+            } else{
+                reg[r] -= 1;
             }
+            res.adr = w_read(reg[r]);
+            res.val = B ? b_read(res.adr) : w_read(res.adr);
+            trace_func("-(R%o) ", r);
+
             break;
         case 5:
             reg[r] -= 2;
             res.adr = reg[r];
             res.adr = w_read(res.adr);
             res.val = w_read(res.adr);
+            trace_func("@-(R%o) ", r);
             break;
         case 6:
             dif = w_read(pc);
             pc += 2;
             res.adr = reg[r] + dif;
             res.val = w_read(res.adr);
+            if (r == 7)
+                trace_func("%o ", res.adr);
+            else
+                trace_func("%o(R%o) ", dif, r);
             break;
         default:
             trace_func("Mode %o is in development\n", mode);
