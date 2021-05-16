@@ -4,10 +4,10 @@
 
 
 void do_add() {
-
-    w_write(dd.adr, (word)dd.val + ss.val);
-    set_N(dd.val + ss.val);
-    set_Z(dd.val + ss.val);
+    word res = dd.val + ss.val;
+    w_write(dd.adr, res);
+    set_N(res);
+    set_Z(res);
     set_C(ss.val + dd.val);
 }
 void do_move() {
@@ -17,7 +17,7 @@ void do_move() {
     }
     else {
         b_write(dd.adr, ss.val);
-        set_N(ss.val << 8);
+        set_N(ss.val << LEN_BYTE);
     }
     set_Z(ss.val);
 }
@@ -27,7 +27,7 @@ void do_nothing() {
     exit(1);
 }
 void do_br() {
-    if (((X >> 7) & 1) != 0)
+    if (X >> (LEX_X - 1))  // if negative
         X = X - 0400;
     pc = pc + 2 * X;
 }
@@ -49,31 +49,37 @@ void do_halt() {
 }
 
 void do_asl() {
+    word res;
     if (B == 0) {
-        w_write(dd.adr, (word) dd.val * 2);
-        set_N((word)dd.val * 2);
-        set_Z((word)dd.val * 2);
+        res = dd.val * 2;
+        w_write(dd.adr, res);
+        set_N(res);
+        set_Z(res);
         set_C(dd.val * 2);
     }
     else{
-        b_write(dd.adr, (byte)dd.val * 2);
-        set_N((dd.val*2) << 8);
-        set_Z((byte) dd.val*2);
-        set_C((((byte) dd.val) * 2) << 8);
+        res = (byte)dd.val * 2;
+        b_write(dd.adr, res);
+        set_N((dd.val*2) << LEN_BYTE);
+        set_Z(res);
+        set_C((((byte) dd.val) * 2) << LEN_BYTE);
     }
 }
 void do_asr() {
+    word res;
     if (B == 0)
     {
-        w_write(dd.adr, (word) dd.val / 2);
-        set_Z((word) dd.val / 2);
-        set_N((word) dd.val / 2);
+        res = (word) dd.val / 2;
+        w_write(dd.adr, res);
+        set_Z(res);
+        set_N(res);
     }
     else
     {
-        b_write(dd.adr, ((byte) dd.val) / 2);
-        set_N((((byte)dd.val) / 2) << 8);
-        set_Z(((byte)dd.val) / 2);
+        res = ((byte) dd.val) / 2;
+        b_write(dd.adr, res);
+        set_N(res << LEN_BYTE);
+        set_Z(res);
     }
     flag_C = 0;
 }
@@ -172,7 +178,7 @@ void do_clz(){
 }
 void set_N(word w)
 {
-    if (((w >> 15) & 1) != 0)
+    if ((w >> (LEN_WORD - 1)) & 1)
         flag_N = 1;
     else
         flag_N = 0;
@@ -180,7 +186,7 @@ void set_N(word w)
 
 void set_C(int w)
 {
-    if ((((w >> 16) & 1) == 1) && (w > 0))
+    if ((w >> LEN_WORD) && (w > 0))
         flag_C = 1;
     else
         flag_C = 0;

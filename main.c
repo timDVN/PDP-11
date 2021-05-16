@@ -18,7 +18,7 @@ FILE *trace;
 word dif;
 
 
-void b_write(Adress adr, byte b){
+void b_write(Adress adr, byte b) {
     if (adr <= 7) {
 
         reg[adr] = byte_to_word(b);
@@ -39,7 +39,7 @@ void w_write(Adress adr, word w) {
     if (adr <= 7) {
         reg[adr] = w;
     } else {
-        mem[adr + 1] = (byte) (w >> 8);
+        mem[adr + 1] = (byte) (w >> LEN_BYTE);
         mem[adr] = (byte) (w);
     }
 
@@ -54,10 +54,10 @@ word w_read(Adress adr) {
     return w;
 }
 
-word byte_to_word(byte b){
+word byte_to_word(byte b) {
     word res;
-    if (((b >> 7) & 1) == 1)
-        res =  b + 0177400;
+    if (b >> (LEN_BYTE - 1))
+        res = b + 0177400;
     else
         res = b;
     return res;
@@ -69,7 +69,7 @@ void load_file(const char *file) {
     FILE *f = fopen(file, "r");
     if (f == NULL) {
         perror(file);
-        exit(errno);
+        exit(1);
     }
     while (fscanf(f, "%hx%hx", &adr, &n) != EOF) {
         for (Adress i = 0; i < n; i++) {
@@ -83,35 +83,29 @@ void load_file(const char *file) {
 
 
 Command cmd[] = {
-        {0077700, 0005000, "CLR",             01,  (void (*)(void)) (char *) do_clr},
-        {0070000, 0010000, "move",            03,  (void (*)(void)) (char *) do_move},
-        {0170000, 0060000, "add",             03,  (void (*)(void)) (char *) do_add},
-        {0177000, 0072000, "ASH",             012, (void (*)(void)) (char *) do_ash},
-        {0177000, 0073000, "ASHC",            012, (void (*)(void)) (char *) do_ashc},
-        {0077700, 0006300, "ASL",             01,  (void (*)(void)) (char *) do_asl},
-        {0077700, 0006200, "ASR",             01,  (void (*)(void)) (char *) do_asr},
-        {0177400, 0000400, "BR",              020, (void (*)(void)) (char *) do_br},
-        {0177400, 0100000, "BPL",             020, (void (*)(void)) (char *) do_bpl},
-        {0177400, 0001400, "BEQ",             020, (void (*)(void)) (char *) do_beq},
-        {0177777, 0000241, "CLC",             0,   (void (*)(void)) (char *) do_clc},
-        {0177777, 0000250, "CLN",             0,   (void (*)(void)) (char *) do_cln},
-        {0177777, 0000244, "CLZ",             0,   (void (*)(void)) (char *) do_clz},
-        {0077700, 0005100, "COM",             01,  (void (*)(void)) (char *) do_com},
-        {0177000, 0004000, "JSR",             011, (void (*)(void)) (char *) do_jsr},
-        {0077700, 0006100, "ROL",             01,  (void (*)(void)) (char *) do_rol},
-        {0077700, 0006000, "ROR",             01,  (void (*)(void)) (char *) do_ror},
-        {0177777, 0000277, "SCC",             0,   (void (*)(void)) (char *) do_scc},
-        {0177777, 0000257, "CCC",             0,   (void (*)(void)) (char *) do_ccc},
-        {0177777, 0000261, "SEC",             0,   (void (*)(void)) (char *) do_sec},
-        {0177777, 0000270, "SEN",             0,   (void (*)(void)) (char *) do_sen},
-        {0177777, 0000264, "SEZ",             0,   (void (*)(void)) (char *) do_sez},
-        {0177000, 0077000, "SOB",             014, (void (*)(void)) (char *) do_sob},
-        {0177000, 0071000, "DIV",             012, (void (*)(void)) (char *) do_div},
-        {0077700, 0005700, "TST",             01,  (void (*)(void)) (char *) do_tst},
-        {0070000, 0020000, "CMP",             03,  (void (*)(void)) (char *) do_cmp},
-        {0177770, 0000200, "RTS",             0,   (void (*)(void)) (char *) do_rts},
-        {0177777, 000000,  "halt",            0,   (void (*)(void)) (char *) do_halt},
-        {0000000, 000000,  "unknown command", 0,   (void (*)(void)) (char *) do_nothing}
+        {0077700, 0005000, "CLR", HAS_DD, do_clr},
+        {0070000, 0010000, "move", HAS_SS | HAS_DD, do_move},
+        {0170000, 0060000, "add", HAS_DD | HAS_SS, do_add},
+        {0077700, 0006300, "ASL", HAS_DD, do_asl},
+        {0077700, 0006200, "ASR", HAS_DD, do_asr},
+        {0177400, 0000400, "BR", HAS_X, do_br},
+        {0177400, 0100000, "BPL", HAS_X, do_bpl},
+        {0177400, 0001400, "BEQ", HAS_X, do_beq},
+        {0177777, 0000241, "CLC", 0, do_clc},
+        {0177777, 0000250, "CLN", 0, do_cln},
+        {0177777, 0000244, "CLZ", 0, do_clz},
+        {0177000, 0004000, "JSR", HAS_DD | HAS_R, do_jsr},
+        {0177777, 0000277, "SCC", 0, do_scc},
+        {0177777, 0000257, "CCC", 0, do_ccc},
+        {0177777, 0000261, "SEC", 0, do_sec},
+        {0177777, 0000270, "SEN", 0, do_sen},
+        {0177777, 0000264, "SEZ", 0, do_sez},
+        {0177000, 0077000, "SOB", HAS_R | HAS_NN, do_sob},
+        {0077700, 0005700, "TST", HAS_DD, do_tst},
+        {0070000, 0020000, "CMP", HAS_DD | HAS_SS, do_cmp},
+        {0177770, 0000200, "RTS", 0, do_rts},
+        {0177777, 000000,  "halt", 0, do_halt},
+        {0000000, 000000,  "unknown command", 0, do_nothing}
 };
 
 void test_mem1() { //тест на моды, w/b_read/write (for file in1.txt)
@@ -136,68 +130,111 @@ void test_mem1() { //тест на моды, w/b_read/write (for file in1.txt)
     reg[5] = 01006;
     Arg res;
     res = get_mr(000);
-    assert(res.val == 5);
+    Arg res_new ={.val = 5, .adr = 0} ;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     res = get_mr(011);
-    assert(res.val == 020);
+    res_new.adr = 01000;
+    res_new.val = 020;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     res = get_mr(022);
-    assert(res.val == 020);
+    res_new.adr = 01000;
+    res_new.val = 020;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     assert(reg[2] == 01002);
     res = get_mr(033);
-    assert(res.val == 0x22);
+    res_new.adr = 01002;
+    res_new.val = 042;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     assert(reg[3] == 01010);
     res = get_mr(044);
-    assert(res.val == 0x22);
+    /*for (int i = 0, i < 12; i+= 2)
+    {
+      fprintf(stderr,"");
+    }*/
+    //fprintf(stderr, "res.val == %x  | reg[4] = %o  | B == % d\n", res.val, reg[4], B);
+    res_new.adr = 01002;
+    res_new.val = 042;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     assert(reg[4] == 01002);
     res = get_mr(055);
-    assert(res.val == 020);
+    res_new.adr = 01000;
+    res_new.val = 020;
+    assert(0 == memcmp(&res, &res_new, sizeof(res)));
     assert(reg[5] == 01004);
-    for (int i = 0; i < 6; i++ )
-    {
+    for (int i = 0; i < 6; i++) {
         reg[i] = 0;
     }
     b_write(15, 0);
     b_write(14, 0);
     w_write(12, 0);
     b_write(10, 0);
-    for (int i = 01000; i < 01012; i += 2 )
+    for (int i = 01000; i < 01012; i += 2)
         w_write(i, 0);
     pc = 01000;
+    trace_func("\n");
+}
+
+void usage(const char *progname) {
+    fprintf(stderr, "USAGE: %s [-t] FILE\n ", progname);
+    fprintf(stderr, "\t-t - trace on\n ");
 }
 
 int main(int argc, char *argv[]) {
-    trc = 0;
-    int inp = 1;
-    if (argv[1][0] == '-' && argv[1][1] == 't' && argv[1][2] == 0 && argv[2] != 0) {
-        int len = strlen(argv[2]);
-        char *t = ".trace";
-        trc = malloc(sizeof(char) * (strlen(t) + len));
-        for (int i = 0; i < len; i++) {
-            trc[i] = argv[2][i];
-        }
-        for (int i = 0; i < 7; i++) {
-            trc[i + len] = t[i];
-        }
-        test_mem1();
-        trace = fopen(trc, "w");
-        inp = 2;
+    // нет аргументов, совсем нет
+    if (argc == 1) {
+        usage(argv[0]);
+        return 1;
     }
+
+    // есть аргумент -t? разбираем его
+    int inp = 1;
+    int trace_level = 0;
+    if (strcmp(argv[1], "-t") == 0)
+    {
+        trace_level = 1;
+        inp++;
+    }
+    // очередной аргумент последний? Это входной файл!
+    if (inp + 1 != argc) {
+        usage(argv[0]);
+        return 1;
+    }
+
+    // задаем имя файла с трассировкой
+    // если есть флаг -t и
+    if (trace_level) {
+        const char *ext = ".trace";
+        size_t len = strlen(argv[inp]) + strlen(ext);
+        char *filename = malloc(len + 1);
+        strcpy(filename, argv[inp]);
+        strcat(filename, ext);
+        printf("filename=<%s>\n", filename);
+        trace = fopen(filename, "w");
+
+        if (trace == NULL) {
+            perror(filename);
+            exit(1);
+        }
+        free(filename);
+    } else
+        trace = stderr;
+
+    test_mem1();
     load_file(argv[inp]);
     w_write(0177564, 0177777);
     run();
-    if (trc != 0)
+    if (trace != NULL)
         fclose(trace);
     return 0;
 }
 
-void trace_func(const char *format, ... ){
-    va_list  ap;
+void trace_func(const char *format, ...) {
+    va_list ap;
     va_start(ap, format);
-    if (trc == 0)
-    {
+    if (trace == NULL) {
         vprintf(format, ap);
-    } else
-    {
-        vfprintf(trace,format, ap);
+    } else {
+        vfprintf(trace, format, ap);
     }
 
     va_end(ap);
@@ -205,61 +242,58 @@ void trace_func(const char *format, ... ){
 
 void run() {
     pc = 01000;
-    int i = 0;
+    int i;
     while (1) {
         word w = w_read(pc);
         trace_func("%06o %06o ", pc, w);
         pc += 2;
         i = 0;
-        while ((w & cmd[i].mask ) != cmd[i].opcode) {
+        while ((w & cmd[i].mask) != cmd[i].opcode) {
             i++;
         }
         trace_func("%s ", cmd[i].name);
-        if ((((w >> 15) & 01) == 1) && ((( cmd[i].mask>> 15) & 01) == 0))
+        if (((w >> POSITION_B) == 1) && ((cmd[i].mask >> POSITION_B) == 0))
             B = 1;
         else
             B = 0;
-        if  (((cmd[i].params >> 1) & 01) == 1)
-        {
-            ss = get_mr(w>>6);
+        if (cmd[i].params & HAS_SS) {
+            ss = get_mr(w>>LEN_DD);
         }
-        if ((cmd[i].params &  01) == 1)
-        {
+        if (cmd[i].params & HAS_DD) {
             dd = get_mr(w);
-            w = w >> 6;
-            if  (((cmd[i].params >> 1) & 01) == 1)
-                w = w >> 6;
+            w = w >> LEN_DD;
+            if (cmd[i].params & HAS_SS)
+            {
+                w = w >> LEN_SS;
+            }
         }
-        if (((cmd[i].params >> 2) & 01) == 1)
-        {
+        if (cmd[i].params & HAS_NN) {
             N = (w & 077);
-            w = w >> 6;
-            trace_func("%o ", pc - 2*N);
+            w = w >> LEN_NN;
+            trace_func("%o ", pc - 2 * N);
         }
-        if (((cmd[i].params >> 3)& 01) == 1)
-        {
+        if (cmd[i].params & HAS_R) {
             R = (w & 07);
             trace_func("R%o ", R);
-            w = w >> 3;
+            w = w >> LEN_R;
         }
-        if (((cmd[i].params >> 4)& 01) == 1)
-        {
+        if (cmd[i].params & HAS_X) {
             X = (w & 0377);
-            char x = (char)x;
-            trace_func("%o ", pc+x*2);
+            //char x = (char)x;
+            trace_func("%o ", pc + X * 2);
         }
         cmd[i].func();
         trace_func("\n");
     }
 }
 
-void  print_r(){
+void print_r() {
     for (int i = 0; i < 8; i++) {
-        trace_func("r%o = %o ; ",i, reg[i]);
+        trace_func("r%o = %o ; ", i, reg[i]);
     }
 }
 
-Arg get_mr(word w){
+Arg get_mr(word w) {
     Arg res;
     int r = w & 7;
     int mode = (w >> 3) & 7;
@@ -282,7 +316,7 @@ Arg get_mr(word w){
             res.val = B ? b_read(res.adr) : w_read(res.adr);
             if (B == 0 || r == 7 || r == 6) {
                 reg[r] += 2;
-            } else{
+            } else {
                 reg[r] += 1;
             }
 
@@ -303,10 +337,10 @@ Arg get_mr(word w){
         case 4:
             if (B == 0 || r == 7 || r == 6) {
                 reg[r] -= 2;
-            } else{
+            } else {
                 reg[r] -= 1;
             }
-            res.adr = w_read(reg[r]);
+            res.adr = reg[r];
             res.val = B ? b_read(res.adr) : w_read(res.adr);
             trace_func("-(R%o) ", r);
 

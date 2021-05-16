@@ -1,4 +1,17 @@
 #define MEMSIZE (64*1024)
+#define HAS_SS (1<<1)
+#define HAS_DD (1)
+#define HAS_NN (1<<2)
+#define HAS_R (1<<3)
+#define HAS_X (1<<4)
+#define LEN_DD 6
+#define LEN_SS 6
+#define LEN_NN 6
+#define LEN_R  3
+#define LEX_X 8
+#define POSITION_B 15
+#define LEN_BYTE 8
+#define LEN_WORD 16
 typedef unsigned char byte;// 8 bit
 typedef unsigned short int word;// 16 bit
 typedef word Adress;
@@ -66,7 +79,6 @@ void trace_func(const char *format, ...);
 
 
 //
-        void do_adc();
 
         void do_add();
 
@@ -82,10 +94,6 @@ void trace_func(const char *format, ...);
 
         void do_halt();
 
-        void do_ash();
-
-        void do_ashc();
-
         void do_asl();
 
         void do_asr();
@@ -94,17 +102,9 @@ void trace_func(const char *format, ...);
 
         void do_cmp();
 
-        void do_com();
-
         void do_jsr();
 
         void do_rts();
-
-        void do_rol();
-
-        void do_ror();
-
-        void do_div();
 
         void do_sob();
 
